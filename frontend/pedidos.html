@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pedidos Finalizados - LBike</title> <!-- Título da página -->
+    <link rel="stylesheet" href="styles.css"> <!-- Link para o arquivo de estilos CSS -->
+</head>
+<body>
+
+    <!-- Cabeçalho com o logo e o menu de navegação -->
+    <header class="header">
+        <div class="logo">
+            <a href="index.html"><img src="./logo.png" alt="Logo LBike"></a> <!-- Link para a página inicial com o logo da LBike -->
+        </div>
+        <nav class="navbar">
+            <ul>
+                <li><a href="items.html">Estoque</a></li> <!-- Link para a página de estoque -->
+                <li><a href="funcionarios.html">Funcionários</a></li> <!-- Link para a página de funcionários -->
+                <li><a href="agendamentos.html">Agendamentos</a></li> <!-- Link para a página de agendamentos -->
+                <li><a href="pedidos.html">Pedidos</a></li> <!-- Link para a página de pedidos -->
+                <button id="logoutButton" class="logout-btn">Sair</button> <!-- Botão para fazer logout -->
+            </ul>
+        </nav>
+    </header>
+
+    <!-- Corpo principal da página com a tabela de pedidos finalizados -->
+    <main>
+        <h2>Pedidos Finalizados</h2> <!-- Título da página de pedidos finalizados -->
+        <table>
+            <thead>
+                <tr>
+                    <th>Cliente</th> <!-- Coluna para nome do cliente -->
+                    <th>Produto</th> <!-- Coluna para nome do produto -->
+                    <th>Marca</th> <!-- Coluna para marca do produto -->
+                    <th>Quantidade</th> <!-- Coluna para quantidade de produtos -->
+                    <th>Total</th> <!-- Coluna para o valor total do pedido -->
+                    <th>Status</th> <!-- Coluna para o status do pedido -->
+                </tr>
+            </thead>
+            <tbody id="tabela-pedidos"></tbody> <!-- Corpo da tabela onde os pedidos serão inseridos dinamicamente -->
+        </table>
+    </main>
+
+    <script src="pedidos.js"></script> <!-- Script para carregar os pedidos (presumivelmente com funcionalidades JavaScript) -->
+    
+    <!-- Script para manipulação do evento de logout -->
+    <script>
+        document.getElementById("logoutButton").addEventListener("click", () => {
+            localStorage.clear(); // 🔹 Remove todos os dados do usuário armazenados no localStorage
+            window.location.replace("login.html"); // 🔹 Redireciona para a página de login, utilizando replace() para evitar que o usuário volte para a página anterior
+        });
+    </script>
+</body>
+</html>

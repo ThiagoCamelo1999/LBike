@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"> <!-- Define a codificação de caracteres para UTF-8 -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Definindo as configurações de visualização responsiva -->
+  <title>Carrinho de Compras - LBike</title> <!-- Título da página -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet"> <!-- Link para a fonte Poppins -->
+  <link rel="stylesheet" href="styles.css"> <!-- Link para o arquivo de estilo externo -->
+  <link rel="stylesheet" href="carrinho.css"> <!-- Link para o arquivo de estilo externo -->
+
+    
+
+</head>
+
+<body>
+<!-- Cabeçalho com logo e navegação -->
+<header class="header">
+    <div class="logo">
+        <a href="index.html">
+            <img src="./logo.png" alt="Logo da LBike">
+        </a>
+    </div>
+    <nav class="navbar">
+        <ul>
+            <li><a href="index.html">Início</a></li>
+            <li><a href="loja.html">Loja</a></li>
+            <button id="logoutButton" class="logout-btn">Sair</button>
+        </ul>
+    </nav>
+</header>
+
+<!-- Corpo principal da página com carrinho de compras -->
+<body class="aa">
+  <div class="container">
+    <h2>Seu Carrinho</h2>
+    <ul id="lista-carrinho"></ul> <!-- Lista de itens no carrinho -->
+    <p>Total: R$ <span id="total">0.00</span></p> <!-- Total do carrinho -->
+    <div class="botoes">
+      <button onclick="esvaziarCarrinho()">Esvaziar Carrinho</button>
+      <button onclick="finalizarCompra()">Finalizar Compra</button>
+      <button id="continuarComprando">Continuar Comprando</button>
+    </div>
+  </div>
+
+  <script>
+    document.getElementById("continuarComprando").addEventListener("click", () => {
+        window.location.href = "loja.html"; // Redireciona para a página da loja
+    });
+
+    // Função para atualizar o carrinho
+    function atualizarCarrinho() {
+      let carrinho = JSON.parse(localStorage.getItem("carrinho")) || [];
+      const lista = document.getElementById('lista-carrinho');
+      lista.innerHTML = ''; // Limpa a lista atual
+      let total = 0; // Inicializa o total do carrinho
+
+      // Itera sobre os itens do carrinho e cria a lista de exibição
+      carrinho.forEach((item, index) => {
+        const subtotal = item.preco * item.quantidade;
+        total += subtotal;
+
+        let li = document.createElement('li');
+        li.innerHTML = `
+            ${item.nome} - R$ ${item.preco.toFixed(2)} <!-- Nome e preço do produto -->
+            <button class="quantidade-btn" onclick="alterarQuantidade(${index}, -1)">➖</button> <!-- Botão para diminuir a quantidade -->
+            <span>${item.quantidade}</span> <!-- Quantidade do item -->
+            <button class="quantidade-btn" onclick="alterarQuantidade(${index}, 1)">➕</button> <!-- Botão para aumentar a quantidade -->
+            <span>Subtotal: R$ ${subtotal.toFixed(2)}</span> <!-- Subtotal do item -->
+            <button class="remover" onclick="removerItem(${index})">🗑️</button> <!-- Botão para remover o item -->
+        `;
+
+        lista.appendChild(li); // Adiciona o item à lista
+      });
+
+      document.getElementById('total').textContent = total.toFixed(2); // Atualiza o total
+    }
+
+    // Função para alterar a quantidade de um item
+    function alterarQuantidade(index, delta) {
+      let carrinho = JSON.parse(localStorage.getItem("carrinho")) || [];
+      if (carrinho[index].quantidade + delta > 0) {
+        carrinho[index].quantidade += delta;
+      } else {
+        carrinho.splice(index, 1); // Remove o item se a quantidade for zero
+      }
+      localStorage.setItem("carrinho", JSON.stringify(carrinho)); // Salva no localStorage
+      atualizarCarrinho(); // Atualiza a lista do carrinho
+    }
+
+    // Função para remover um item do carrinho
+    function removerItem(index) {
+      let carrinho = JSON.parse(localStorage.getItem("carrinho")) || [];
+      carrinho.splice(index, 1); // Remove o item da lista
+      localStorage.setItem("carrinho", JSON.stringify(carrinho)); // Salva a mudança no localStorage
+      atualizarCarrinho(); // Atualiza a lista do carrinho
+    }
+
+    // Função para esvaziar o carrinho
+    function esvaziarCarrinho() {
+      localStorage.removeItem("carrinho"); // Remove o carrinho do localStorage
+      atualizarCarrinho(); // Atualiza a lista do carrinho
+    }
+
+    // Função para finalizar a compra
+    async function finalizarCompra() {
+      let carrinho = JSON.parse(localStorage.getItem("carrinho")) || [];
+      let cliente_nome = localStorage.getItem("cliente_nome");
+      let token = localStorage.getItem("token");
+
+      const pedido = {
+          cliente_nome: cliente_nome,
+          itens: carrinho.map(item => ({
+              produto_id: item.id,
+              quantidade: item.quantidade
+          }))
+      };
+
+      try {
+          const response = await fetch("http://localhost:3000/api/loja/pedidos", {
+              method: "POST", 
+              headers: {
+                  "Content-Type": "application/json",
+                  "Authorization": `Bearer ${token}` // Envia o token de autenticação
+              },
+              body: JSON.stringify(pedido),
+          });
+
+          alert("Compra finalizada com sucesso!"); // Alerta ao finalizar a compra
+          localStorage.removeItem("carrinho"); // Remove o carrinho do localStorage
+          atualizarCarrinho(); // Atualiza o carrinho
+      } catch (error) {
+          alert(error.message); // Alerta se ocorrer erro
+      }
+    }
+
+    // Função de logout
+    document.getElementById("logoutButton").addEventListener("click", () => {
+        localStorage.clear(); // Limpa todos os dados do localStorage
+        window.location.replace("login.html"); // Redireciona para a página de login
+    });
+
+    atualizarCarrinho(); // Atualiza o carrinho ao carregar a página
+  </script>
+</body>
+</html>

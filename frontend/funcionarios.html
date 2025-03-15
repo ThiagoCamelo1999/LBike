@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Funcionários - LBike</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <!-- Cabeçalho com logo e navegação -->
+    <header class="header">
+        <div class="logo">
+            <a href="index.html">
+                <img src="./logo.png" alt="Logotipo LBike">
+            </a>
+        </div>
+        <nav class="navbar">
+            <ul>
+                <li><a href="agendamentos.html">Agendamentos</a></li>
+                <li><a href="items.html">Estoque</a></li>
+                <li><a href="loja.html">Loja</a></li>
+                <li><a href="pedidos.html">Pedidos</a></li>
+                <button id="logoutButton" class="logout-btn">Sair</button>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <!-- Botão para exibir o formulário de criação -->
+        <button id="toggleFormButton">Criar Funcionário</button>
+
+        <!-- Formulário para criação de funcionário -->
+        <div id="formContainer" style="display: none;">
+            <h2>Criar Funcionário</h2>
+            <form id="funcionarioForm">
+                <input type="text" name="nome" placeholder="Nome" required>
+                <input type="text" name="cpf" placeholder="CPF" required>
+                <input type="text" name="telefone" placeholder="Telefone" required>
+                <input type="text" name="endereco" placeholder="Endereço" required>
+                <input type="number" name="dias_trabalhados" placeholder="Dias Trabalhados" required>
+                <input type="number" name="valor_pago" placeholder="Valor Pago" required>
+                <button type="submit">Criar Funcionário</button>
+            </form>
+        </div>
+
+        <!-- Lista de funcionários cadastrados -->
+        <h2>Lista de Funcionários</h2>
+        <ul id="funcList">
+            <li class="list-header">
+                <span>Nome</span>
+                <span>CPF</span>
+                <span>Telefone</span>
+                <span>Endereço</span>
+                <span>Dias Trabalhados</span>
+                <span>Valor Pago</span>
+            </li>
+            <ul id="funcionarioList"></ul>
+        </ul>
+
+        <!-- Formulário para edição de funcionários -->
+        <div id="editFormContainer" style="display: none;">
+            <h2>Editar Funcionário</h2>
+            <form id="editFuncionarioForm">
+                <input type="text" name="nome" placeholder="Nome" required>
+                <input type="text" name="cpf" placeholder="CPF" required>
+                <input type="text" name="telefone" placeholder="Telefone" required>
+                <input type="text" name="endereco" placeholder="Endereço" required>
+                <input type="number" name="dias_trabalhados" placeholder="Dias Trabalhados" required>
+                <input type="number" name="valor_pago" placeholder="Valor Pago" required>
+                <button type="submit">Salvar Alterações</button>
+            </form>
+        </div>
+    </main>
+
+    <!-- Rodapé com informações de direitos autorais -->
+    <footer>
+        <p>&copy; 2024 LBike. Todos os direitos reservados.</p>
+    </footer>
+
+    <!-- Scripts para interatividade -->
+    <script src="scripts.js"></script>
+    <script>
+        // Função para carregar a lista de funcionários
+        async function loadFuncionarios() {
+            const funcionarioList = document.getElementById('funcionarioList');
+
+            // Limpa a lista antes de carregá-la novamente
+            funcionarioList.innerHTML = '';
+
+            try {
+                const funcionarios = await getAllResources('funcionarios');
+
+                // Adiciona cada funcionário na lista
+                funcionarios.forEach(item => {
+                    const li = document.createElement('li');
+                    li.classList.add('list-item');
+                    li.innerHTML = `
+                        <span>${item.nome}</span>
+                        <span>${item.cpf}</span>
+                        <span>${item.telefone}</span>
+                        <span>${item.endereco}</span>
+                        <span>${item.dias_trabalhados}</span>
+                        <span>R$${item.valor_pago.toFixed(2)}</span>
+                        <button onclick="editFuncionario(${item.id})">Editar</button>
+                        <button onclick="deleteFuncionario(${item.id})">Excluir</button>
+                    `;
+                    funcionarioList.appendChild(li);
+                });
+            } catch (error) {
+                alert('Erro ao carregar funcionários: ' + error.message);
+            }
+        }
+
+        // Função para excluir um funcionário
+        async function deleteFuncionario(funcionarioId) {
+            const confirmation = confirm("Tem certeza que deseja excluir este funcionário?");
+            if (!confirmation) return;
+
+            try {
+                await fetch(`http://localhost:3000/api/funcionarios/${funcionarioId}`, {
+                    method: 'DELETE',
+                });
+                alert('Funcionário excluído com sucesso');
+                loadFuncionarios();
+            } catch (error) {
+                alert('Erro ao excluir funcionário: ' + error.message);
+            }
+        }
+
+        // Função para preparar a edição de um funcionário
+        let editingFuncionarioId = null;
+        async function editFuncionario(funcionarioId) {
+            editingFuncionarioId = funcionarioId;
+
+            try {
+                const funcionario = await getResourceById(`funcionarios/${funcionarioId}`);
+
+                // Preenche o formulário de edição
+                const editForm = document.getElementById('editFuncionarioForm');
+                Object.keys(funcionario).forEach(key => {
+                    const input = editForm.querySelector(`[name=${key}]`);
+                    if (input) input.value = funcionario[key];
+                });
+
+                document.getElementById('editFormContainer').style.display = 'block';
+            } catch (error) {
+                alert('Erro ao carregar dados do funcionário: ' + error.message);
+            }
+        }
+
+        // Submissão do formulário de edição
+        document.getElementById('editFuncionarioForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const data = Object.fromEntries(new FormData(e.target).entries());
+
+            try {
+                await updateResource(`funcionarios/${editingFuncionarioId}`, data);
+                alert('Funcionário atualizado com sucesso');
+                document.getElementById('editFormContainer').style.display = 'none';
+                loadFuncionarios();
+            } catch (error) {
+                alert('Erro ao salvar alterações: ' + error.message);
+            }
+        });
+
+        // Inicialização de eventos da página
+        document.addEventListener('DOMContentLoaded', () => {
+            const toggleFormButton = document.getElementById('toggleFormButton');
+            const formContainer = document.getElementById('formContainer');
+
+            toggleFormButton.addEventListener('click', () => {
+                const isHidden = formContainer.style.display === 'none' || !formContainer.style.display;
+                formContainer.style.display = isHidden ? 'block' : 'none';
+                toggleFormButton.textContent = isHidden ? 'Cancelar' : 'Criar Funcionário';
+            });
+
+            initEvents(); // Chama inicialização dos eventos
+        });
+
+        // Função para configurar os eventos iniciais
+        function initEvents() {
+            const funcionarioForm = document.getElementById('funcionarioForm');
+
+            funcionarioForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const data = Object.fromEntries(new FormData(funcionarioForm).entries());
+
+                try {
+                    await createResource('funcionarios', data);
+                    funcionarioForm.reset();
+                    loadFuncionarios();
+                } catch (error) {
+                    alert('Erro ao criar funcionário: ' + error.message);
+                }
+            });
+
+            loadFuncionarios(); // Carrega a lista inicial de funcionários
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            const tipo_usuario = localStorage.getItem("tipo_usuario");
+
+            if (tipo_usuario !== "dono") {
+                window.location.href = "index.html"; // 🔹 Redireciona clientes para a página inicial
+            }
+        });
+
+        document.getElementById("logoutButton").addEventListener("click", () => {
+    localStorage.clear(); // 🔹 Remove todos os dados do usuário
+    window.location.replace("login.html"); // 🔹 Usa replace() para evitar voltar para a página anterior
+});
+
+    </script>
+</body>
+
+</html>
